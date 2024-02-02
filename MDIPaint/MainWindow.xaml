@@ -1,12 +1,118 @@
-﻿<Window x:Class="MDIPaint.MainWindow"
+﻿<Window x:Name="MainForm" x:Class="MDIPaint.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MDIPaint"
+        xmlns:mdi="clr-namespace:WPF.MDI;assembly=WPF.MDI" xmlns:system="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        
+        Title="Мой Paint" Height="450" Width="800" WindowStyle="ThreeDBorderWindow" Icon="pack://application:,,,/Sources/Icons/AppIcon.png">
+    <Grid x:Name="Workplace" Background="White">
+        <Ribbon Grid.RowSpan="2">
+            <Ribbon.QuickAccessToolBar>
+                <RibbonQuickAccessToolBar Margin="0,1,0,-3" >
+                    <RibbonButton x:Name="SmallSaveButton" 
+                                         SmallImageSource="pack://application:,,,/Sources/Icons/Save.png" Click="SaveButton_Click" />
+                </RibbonQuickAccessToolBar>
+            </Ribbon.QuickAccessToolBar>
+            <Ribbon.ApplicationMenu>
+                <RibbonApplicationMenu SmallImageSource="pack://application:,,,/Sources/Icons/Menu.png">
+                    <RibbonApplicationMenuItem x:Name="CreateButton" Header="Создать" ImageSource="pack://application:,,,/Sources/Icons/Create.png" Click="CreateButton_Click"/>
+                    <RibbonApplicationMenuItem x:Name="OpenButton" Header="Открыть" ImageSource="pack://application:,,,/Sources/Icons/Open.png" Click="OpenButton_Click"/>
+                    <RibbonSeparator/>
+                    <RibbonApplicationMenuItem x:Name="SaveButton" Header="Сохранить" ImageSource="pack://application:,,,/Sources/Icons/Save.png" Click="SaveButton_Click"/>
+                    <RibbonApplicationMenuItem x:Name="SaveAsButton" Header="Сохранить как" ImageSource="pack://application:,,,/Sources/Icons/Save_as.png" Click="SaveAsButton_Click"/>
+                    <RibbonApplicationMenu.FooterPaneContent>
+                        <DockPanel LastChildFill="False">
+                            <RibbonButton x:Name="ExitButton"
+                                     Label="Выход"
+                                     SmallImageSource="pack://application:,,,/Sources/Icons/Exit.png"
+                                     ToolTipTitle="Exit" 
+                                     DockPanel.Dock="Right"
+                                     Margin="2"
+                                     BorderBrush="#B8114EAF" Click="ExitButton_Click"/>
+                        </DockPanel>
+                    </RibbonApplicationMenu.FooterPaneContent>
+                </RibbonApplicationMenu>
+            </Ribbon.ApplicationMenu>
+            <RibbonTab Header="Главная">
+                <RibbonGroup Header="Инструменты">
+                    <RibbonRadioButton x:Name="PenButton" SmallImageSource="pack://application:,,,/Sources/Icons/Pen.png" Label="Перо" Checked="PenButton_Checked"/>
+                    <RibbonRadioButton x:Name="EraserButton" SmallImageSource="pack://application:,,,/Sources/Icons/Eraser.png" Label="Ластик" Checked="EraserButton_Checked"/>
+                    <RibbonRadioButton x:Name="LineButton" Label="Линия" SmallImageSource="pack://application:,,,/Sources/Icons/Line.png" Checked="LineButton_Checked"/>
+                    <RibbonRadioButton x:Name="EllipseButton" Label="Эллипс" SmallImageSource="pack://application:,,,/Sources/Icons/Ellipse.png" Checked="EllipseButton_Checked"/>
+                    <RibbonRadioButton x:Name="StarButton" Label="Звезда" SmallImageSource="pack://application:,,,/Sources/Icons/Star.png"/>
+                </RibbonGroup>
+                <RibbonGroup Header="Размер">
+                    <RibbonMenuButton LargeImageSource="pack://application:,,,/Sources/Icons/Size.png">
+                        <RibbonRadioButton x:Name="OnePxSizeButton" Label="1 px" Checked="OnePxSizeButton_Checked">
+                            <RibbonRadioButton.Tag>
+                                <system:Double>1.0</system:Double>
+                            </RibbonRadioButton.Tag>
+                        </RibbonRadioButton>
+                        <RibbonRadioButton x:Name="ThreePxSizeButton" Label="3 px" Checked="ThreePxSizeButton_Checked">
+                            <RibbonRadioButton.Tag>
+                                <system:Double>3.0</system:Double>
+                            </RibbonRadioButton.Tag>
+                        </RibbonRadioButton>
+                        <RibbonRadioButton x:Name="FivePxSizeButton" Label="5 px" Checked="FivePxSizeButton_Checked">
+                            <RibbonRadioButton.Tag>
+                                <system:Double>5.0</system:Double>
+                            </RibbonRadioButton.Tag>
+                        </RibbonRadioButton>
+                        <RibbonRadioButton x:Name="EightPxSizeButton" Label="8 px" Checked="EightPxSizeButton_Checked">
+                            <RibbonRadioButton.Tag>
+                                <system:Double>8.0</system:Double>
+                            </RibbonRadioButton.Tag>
+                        </RibbonRadioButton>
+                    </RibbonMenuButton>
+                </RibbonGroup>
+                <RibbonGroup Header="Цвета">
+                    <RibbonRadioButton x:Name="RedColorButton" SmallImageSource="pack://application:,,,/Sources/Icons/Red.png" Checked="RedColorButton_Checked">
+                        <RibbonRadioButton.Tag>
+                            <SolidColorBrush Color="Red"/>
+                        </RibbonRadioButton.Tag>
+                    </RibbonRadioButton>
+                    <RibbonRadioButton x:Name="BlueColorButton" SmallImageSource="pack://application:,,,/Sources/Icons/Blue.png" Checked="BlueColorButton_Checked">
+                        <RibbonRadioButton.Tag>
+                            <SolidColorBrush Color="Blue"/>
+                        </RibbonRadioButton.Tag>
+                    </RibbonRadioButton>
+                    <RibbonRadioButton x:Name="GreenColorButton" SmallImageSource="pack://application:,,,/Sources/Icons/Green.png" Checked="GreenColorButton_Checked">
+                        <RibbonRadioButton.Tag>
+                            <SolidColorBrush Color="Green"/>
+                        </RibbonRadioButton.Tag>
+                    </RibbonRadioButton>
+                    <RibbonRadioButton x:Name="BlackColorButton" SmallImageSource="pack://application:,,,/Sources/Icons/Black.png" Checked="BlackColorButton_Checked">
+                        <RibbonRadioButton.Tag>
+                            <SolidColorBrush Color="Black"/>
+                        </RibbonRadioButton.Tag>
+                    </RibbonRadioButton>
+                    <RibbonRadioButton x:Name="YellowColorButton" SmallImageSource="pack://application:,,,/Sources/Icons/Yellow.png" Checked="YellowColorButton_Checked">
+                        <RibbonRadioButton.Tag>
+                            <SolidColorBrush Color="Yellow"/>
+                        </RibbonRadioButton.Tag>
+                    </RibbonRadioButton>
+                    <RibbonRadioButton x:Name="PurpleColorButton" SmallImageSource="pack://application:,,,/Sources/Icons/Purple.png" Checked="PurpleColorButton_Checked">
+                        <RibbonRadioButton.Tag>
+                            <SolidColorBrush Color="Purple"/>
+                        </RibbonRadioButton.Tag>
+                    </RibbonRadioButton>
+                </RibbonGroup>
+            </RibbonTab>
+            <RibbonTab Header="Вид">
+                <RibbonGroup Header="Масштаб">
+                    <RibbonButton x:Name="ZoomInButton" Label="Масштаб+" Click="ZoomInButton_Click"/>
+                    <RibbonButton x:Name="ZoomOutButton" Label="Масштаб-" Click="ZoomOutButton_Click"/>
+                </RibbonGroup>
+            </RibbonTab>
+            <RibbonTab Header="Справка">
+                <RibbonGroup Header="О программе">
+                    <RibbonButton x:Name="AboutButton" LargeImageSource="pack://application:,,,/Sources/Icons/About.png" Click="AboutButton_Click"/>
+                </RibbonGroup>
+            </RibbonTab>
+        </Ribbon>
+        <mdi:MdiContainer x:Name="MdiContainer" Margin="0,138,0,0" MdiLayout="TileVertical">
+        </mdi:MdiContainer>
     </Grid>
 </Window>
