@@ -41,7 +41,7 @@
                     <RibbonRadioButton x:Name="EraserButton" SmallImageSource="pack://application:,,,/Sources/Icons/Eraser.png" Label="Ластик" Checked="EraserButton_Checked"/>
                     <RibbonRadioButton x:Name="LineButton" Label="Линия" SmallImageSource="pack://application:,,,/Sources/Icons/Line.png" Checked="LineButton_Checked"/>
                     <RibbonRadioButton x:Name="EllipseButton" Label="Эллипс" SmallImageSource="pack://application:,,,/Sources/Icons/Ellipse.png" Checked="EllipseButton_Checked"/>
-                    <RibbonRadioButton x:Name="StarButton" Label="Звезда" SmallImageSource="pack://application:,,,/Sources/Icons/Star.png"/>
+                    <RibbonRadioButton x:Name="StarButton" Label="Звезда" SmallImageSource="pack://application:,,,/Sources/Icons/Star.png" Checked="StarButton_Checked"/>
                 </RibbonGroup>
                 <RibbonGroup Header="Размер">
                     <RibbonMenuButton LargeImageSource="pack://application:,,,/Sources/Icons/Size.png">
@@ -98,6 +98,18 @@
                             <SolidColorBrush Color="Purple"/>
                         </RibbonRadioButton.Tag>
                     </RibbonRadioButton>
+                </RibbonGroup>
+                <RibbonGroup x:Name="StarSettings" Header="Параметры звезды">
+                    <StackPanel Orientation="Vertical">
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Количество лучей:"/>
+                            <TextBox x:Name="StarPointCount" Width="100" PreviewTextInput="StarPointCount_PreviewTextInput" Text="0" TextChanged="StarPointCount_TextChanged"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Отношение радиусов:"/>
+                            <TextBox x:Name="RadiusQuotient" Width="100" PreviewTextInput="RadiusQuotient_PreviewTextInput" Text="0" TextChanged="RadiusQuotient_TextChanged" />
+                        </StackPanel> 
+                    </StackPanel>
                 </RibbonGroup>
             </RibbonTab>
             <RibbonTab Header="Вид">
