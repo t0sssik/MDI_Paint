@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using WPF.MDI;
+using static System.Windows.Forms.AxHost;
 
 namespace MDIPaint
 {
@@ -76,6 +77,54 @@ namespace MDIPaint
             PenColor = Color.FromRgb(0, 0, 0);
             PenSize = 3.0;
             InkCanvases.CollectionChanged += InkCanvases_CollectionChanged;
+            ScaleTextBox.Text = $"Масштаб: 100%";
+        }
+        /// <summary>
+        /// Сохранение всех дочерних окон перед закрытием родительского окна
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MainForm_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            foreach (var child in MdiContainer.Children)
+            {
+                var inkCanvas = child.Content as InkCanvas;
+                if ((bool)inkCanvas.Tag == false)
+                {
+                    MessageBoxResult result = MessageBox.Show("Изменения не сохранены. Хотите сохранить изменения перед закрытием?", "Предупреждение", MessageBoxButton.YesNoCancel);
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        if (child.Tag == null)
+                        {
+                            var saveFileDialog = new SaveFileDialog
+                            {
+                                Filter = "Bitmap (*.bmp)|*.bmp|JPEG (*.jpg)|*.jpg|PNG (*.png)|*.png",
+                                DefaultExt = "png"
+                            };
+
+                            if (saveFileDialog.ShowDialog() == true)
+                            {
+                                SaveInkCanvas(inkCanvas, saveFileDialog.FileName);
+                                // Сохраняем путь к файлу в свойствах MdiChild
+                                child.Tag = saveFileDialog.FileName;
+                                child.Tag = true;
+                            }
+                        }
+                        else
+                        {
+                            // Если это не первое сохранение, используем сохраненный путь к файлу
+                            SaveInkCanvas(inkCanvas, (string)child.Tag);
+                            inkCanvas.Tag = true;
+                        }
+                    }
+                    else if (result == MessageBoxResult.Cancel)
+                    {
+                        // Отменяем закрытие окна
+                        e.Cancel = true;
+                        return;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -245,6 +294,7 @@ namespace MDIPaint
                     SmallSaveButton.IsEnabled = false;
                 }
             };
+            NewMDIChild.GotFocus += MdiChild_GotFocus;
             MdiContainer.Children.Add(NewMDIChild);
             if (InkCanvases.Count == 0)
             {
@@ -259,6 +309,17 @@ namespace MDIPaint
                 SmallSaveButton.IsEnabled = true;
             }
         }
+
+        private void MdiChild_GotFocus(object sender, EventArgs e)
+        {
+            var activeMdiChild = sender as MdiChild;
+            if (activeMdiChild == null) return;
+            var activeInkCanvas = activeMdiChild.Content as InkCanvas;
+            ScaleTransform scale = (ScaleTransform)activeInkCanvas.LayoutTransform;
+            // Обновляем текстовое поле с текущим масштабом
+            ScaleTextBox.Text = $"Масштаб: {scale.ScaleX * 100}%";
+        }
+
         #region Изменение цвета пера
         private void RedColorButton_Checked(object sender, RoutedEventArgs e)
         {
@@ -654,10 +715,11 @@ namespace MDIPaint
 
             // Получаем параметры звезды из текстовых полей
             int numPoints = int.Parse(StarPointCount.Text);
-            double innerRadiusRatio = double.Parse(RadiusQuotient.Text);
+            double innerRadius = double.Parse(InRadius.Text);
+            double outerRadius = double.Parse(OutRadius.Text);
 
             // Создаем звезду
-            var star = CreateStar(mousePosition, numPoints, innerRadiusRatio);
+            var star = CreateStar(mousePosition, numPoints, innerRadius, outerRadius);
 
             // Добавляем звезду на холст
             //var starStroke = new Stroke(new StylusPointCollection(((Polygon)star).Points.Select(p => new StylusPoint(p.X, p.Y))));
@@ -670,12 +732,10 @@ namespace MDIPaint
         /// <param name="numPoints">Число лучей</param>
         /// <param name="innerRadiusRatio">Отношение радиусов</param>
         /// <returns></returns>
-        private Shape CreateStar(Point center, int numPoints, double innerRadiusRatio)
+        private Shape CreateStar(Point center, int numPoints, double innerRadius, double outerRadius)
         {
             var points = new PointCollection();
             double angleStep = Math.PI / numPoints;
-            double outerRadius = 50; // Вы можете изменить это значение в соответствии с вашими потребностями
-            double innerRadius = outerRadius * innerRadiusRatio;
 
             for (int i = 0; i < 2 * numPoints; i++)
             {
@@ -710,7 +770,14 @@ namespace MDIPaint
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void RadiusQuotient_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        private void OutRadius_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (!char.IsDigit(e.Text, 0))
+            {
+                e.Handled = true;
+            }
+        }
+        private void InRadius_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             if (!char.IsDigit(e.Text, 0))
             {
@@ -727,7 +794,20 @@ namespace MDIPaint
             TextBox textBox = sender as TextBox;
             if (string.IsNullOrWhiteSpace(textBox.Text))
             {
-                textBox.Text = "0";
+                textBox.Text = "3";
+                return;
+            }
+            if (textBox != null)
+            {
+                int value = int.Parse(textBox.Text);
+                if (value > 100)
+                {
+                    textBox.Text = "100";
+                }
+                if (value < 3)
+                {
+                    textBox.Text = "3";
+                }
             }
         }
         /// <summary>
@@ -735,12 +815,46 @@ namespace MDIPaint
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void RadiusQuotient_TextChanged(object sender, TextChangedEventArgs e)
+        private void OutRadius_TextChanged(object sender, TextChangedEventArgs e)
         {
             TextBox textBox = sender as TextBox;
             if (string.IsNullOrWhiteSpace(textBox.Text))
             {
                 textBox.Text = "0";
+                return;
+            }
+            if (textBox != null)
+            {
+                int value = int.Parse(textBox.Text);
+                if (value > 100)
+                {
+                    textBox.Text = "100";
+                }
+                if (value < 0)
+                {
+                    textBox.Text = "0";
+                }
+            }
+        }
+        private void InRadius_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            TextBox textBox = sender as TextBox;
+            if (string.IsNullOrWhiteSpace(textBox.Text))
+            {
+                textBox.Text = "0";
+                return;
+            }
+            if (textBox != null)
+            {
+                int value = int.Parse(textBox.Text);
+                if (value > 50)
+                {
+                    textBox.Text = "50";
+                }
+                if (value < 0)
+                {
+                    textBox.Text = "0";
+                }
             }
         }
         #endregion
@@ -759,6 +873,8 @@ namespace MDIPaint
             ScaleTransform scale = (ScaleTransform)activeInkCanvas.LayoutTransform;
             scale.ScaleX *= 2;
             scale.ScaleY *= 2;
+            // Обновляем текстовое поле с текущим масштабом
+            ScaleTextBox.Text = $"Масштаб: {scale.ScaleX * 100}%";
         }
         /// <summary>
         /// Уменьшение масштаба активного холста
@@ -773,7 +889,16 @@ namespace MDIPaint
             ScaleTransform scale = (ScaleTransform)activeInkCanvas.LayoutTransform;
             scale.ScaleX /= 2;
             scale.ScaleY /= 2;
+            // Обновляем текстовое поле с текущим масштабом
+            ScaleTextBox.Text = $"Масштаб: {scale.ScaleX * 100}%";
         }
+
         #endregion
+
+        private void MdiContainer_MouseMove(object sender, MouseEventArgs e)
+        {
+            Point position = e.GetPosition(MdiContainer);
+            CursorPositionTextBox.Text = $"X = {position.X}, Y = {position.Y}";
+        }
     }
 }

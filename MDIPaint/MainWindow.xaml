@@ -6,13 +6,19 @@
         xmlns:local="clr-namespace:MDIPaint"
         xmlns:mdi="clr-namespace:WPF.MDI;assembly=WPF.MDI" xmlns:system="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
-        Title="Мой Paint" Height="450" Width="800" WindowStyle="ThreeDBorderWindow" Icon="pack://application:,,,/Sources/Icons/AppIcon.png">
+        Title="Мой Paint" Height="450" Width="800" WindowStyle="ThreeDBorderWindow" Icon="pack://application:,,,/Sources/Icons/AppIcon.png" Closing="MainForm_Closing">
     <Grid x:Name="Workplace" Background="White">
         <Ribbon Grid.RowSpan="2">
             <Ribbon.QuickAccessToolBar>
                 <RibbonQuickAccessToolBar Margin="0,1,0,-3" >
                     <RibbonButton x:Name="SmallSaveButton" 
                                          SmallImageSource="pack://application:,,,/Sources/Icons/Save.png" Click="SaveButton_Click" />
+                    <TextBox x:Name="CursorPositionTextBox" 
+                         Width="150" 
+                         IsReadOnly="True" TextAlignment="Right"/> 
+                    <TextBox x:Name="ScaleTextBox" 
+                         Width="150" 
+                         IsReadOnly="True" TextAlignment="Right"/>
                 </RibbonQuickAccessToolBar>
             </Ribbon.QuickAccessToolBar>
             <Ribbon.ApplicationMenu>
@@ -100,15 +106,19 @@
                     </RibbonRadioButton>
                 </RibbonGroup>
                 <RibbonGroup x:Name="StarSettings" Header="Параметры звезды">
-                    <StackPanel Orientation="Vertical">
+                    <StackPanel Orientation="Horizontal">
                         <StackPanel Orientation="Horizontal">
                             <Label Content="Количество лучей:"/>
-                            <TextBox x:Name="StarPointCount" Width="100" PreviewTextInput="StarPointCount_PreviewTextInput" Text="0" TextChanged="StarPointCount_TextChanged"/>
+                            <TextBox x:Name="StarPointCount" Width="40" PreviewTextInput="StarPointCount_PreviewTextInput" Text="0" TextChanged="StarPointCount_TextChanged" Height="20"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
-                            <Label Content="Отношение радиусов:"/>
-                            <TextBox x:Name="RadiusQuotient" Width="100" PreviewTextInput="RadiusQuotient_PreviewTextInput" Text="0" TextChanged="RadiusQuotient_TextChanged" />
-                        </StackPanel> 
+                            <Label Content="Внеш.радиус:"/>
+                            <TextBox x:Name="OutRadius" Width="40" PreviewTextInput="OutRadius_PreviewTextInput" Text="0" TextChanged="OutRadius_TextChanged" Height="20" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Внутр.радиус:"/>
+                            <TextBox x:Name="InRadius" Width="40" PreviewTextInput="InRadius_PreviewTextInput" Text="0" TextChanged="InRadius_TextChanged" Height="20" />
+                        </StackPanel>
                     </StackPanel>
                 </RibbonGroup>
             </RibbonTab>
@@ -124,7 +134,7 @@
                 </RibbonGroup>
             </RibbonTab>
         </Ribbon>
-        <mdi:MdiContainer x:Name="MdiContainer" Margin="0,138,0,0" MdiLayout="TileVertical">
+        <mdi:MdiContainer x:Name="MdiContainer" Margin="0,138,0,0" MdiLayout="TileVertical" MouseMove="MdiContainer_MouseMove">
         </mdi:MdiContainer>
     </Grid>
 </Window>
