@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.IO;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Ink;
@@ -13,7 +12,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using WPF.MDI;
-using static System.Windows.Forms.AxHost;
 
 namespace MDIPaint
 {
@@ -46,6 +44,9 @@ namespace MDIPaint
         /// Текущая точка
         /// </summary>
         private Point currentPoint;
+
+        private Polygon currentStar;
+        private PointCollection starPoints;
 
         /// <summary>
         /// Иничиализация при запуске окна
@@ -539,6 +540,7 @@ namespace MDIPaint
                 canvas.MouseMove -= LineDrawing_MouseMove;
                 canvas.MouseUp -= LineDrawing_MouseUp;
                 canvas.MouseDown -= StarDrawing_MouseDown;
+                canvas.MouseUp -= StarDrawing_MouseUp;
             }
         }
 
@@ -555,9 +557,9 @@ namespace MDIPaint
                 canvas.MouseMove -= LineDrawing_MouseMove;
                 canvas.MouseUp -= LineDrawing_MouseUp;
                 canvas.MouseDown -= StarDrawing_MouseDown;
+                canvas.MouseUp -= StarDrawing_MouseUp;
             }
         }
-
         private void LineButton_Checked(object sender, RoutedEventArgs e)
         {
             StarSettings.Visibility = Visibility.Hidden;
@@ -568,6 +570,7 @@ namespace MDIPaint
                 canvas.MouseMove -= EllipseDrawing_MouseMove;
                 canvas.MouseUp -= EllipseDrawing_MouseUp;
                 canvas.MouseDown -= StarDrawing_MouseDown;
+                canvas.MouseUp -= StarDrawing_MouseUp;
 
                 canvas.EditingMode = InkCanvasEditingMode.None;
                 canvas.MouseDown += LineDrawing_MouseDown;
@@ -585,6 +588,7 @@ namespace MDIPaint
                 canvas.MouseMove -= LineDrawing_MouseMove;
                 canvas.MouseUp -= LineDrawing_MouseUp;
                 canvas.MouseDown -= StarDrawing_MouseDown;
+                canvas.MouseUp -= StarDrawing_MouseUp;
 
                 canvas.EditingMode = InkCanvasEditingMode.None;
                 canvas.MouseDown += EllipseDrawing_MouseDown;
@@ -606,6 +610,7 @@ namespace MDIPaint
 
                 canvas.EditingMode = InkCanvasEditingMode.None;
                 canvas.MouseDown += StarDrawing_MouseDown;
+                canvas.MouseUp += StarDrawing_MouseUp;
             }
         }
 
@@ -640,6 +645,26 @@ namespace MDIPaint
         }
         private void LineDrawing_MouseUp(object sender, MouseButtonEventArgs e)
         {
+            var inkCanvas = sender as InkCanvas;
+            if (inkCanvas == null || currentLine == null) return;
+
+            // Создаем новый Stroke из Line
+            var stroke = new Stroke(new StylusPointCollection(new List<StylusPoint>
+            {
+                new StylusPoint(currentLine.X1, currentLine.Y1),
+                new StylusPoint(currentLine.X2, currentLine.Y2)
+            }));
+
+            stroke.DrawingAttributes.Color = ((SolidColorBrush)currentLine.Stroke).Color;
+            stroke.DrawingAttributes.Width = currentLine.StrokeThickness;
+            stroke.DrawingAttributes.Height = currentLine.StrokeThickness;
+
+            // Удаляем Line из InkCanvas
+            inkCanvas.Children.Remove(currentLine);
+
+            // Добавляем Stroke в InkCanvas
+            inkCanvas.Strokes.Add(stroke);
+
             currentLine = null;
         }
         #endregion
@@ -705,6 +730,54 @@ namespace MDIPaint
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
+        //private void StarDrawing_MouseDown(object sender, MouseButtonEventArgs e)
+        //{
+        //    var inkCanvas = sender as InkCanvas;
+        //    if (inkCanvas == null) return;
+
+        //    // Получаем координаты клика мыши
+        //    var mousePosition = e.GetPosition(inkCanvas);
+
+        //    // Получаем параметры звезды из текстовых полей
+        //    int numPoints = int.Parse(StarPointCount.Text);
+        //    double innerRadius = double.Parse(InRadius.Text);
+        //    double outerRadius = double.Parse(OutRadius.Text);
+
+        //    // Создаем звезду
+        //    var star = CreateStar(mousePosition, numPoints, innerRadius, outerRadius);
+
+        //    // Добавляем звезду на холст
+        //    //var starStroke = new Stroke(new StylusPointCollection(((Polygon)star).Points.Select(p => new StylusPoint(p.X, p.Y))));
+        //    inkCanvas.Children.Add(star);
+        //}
+        ///// <summary>
+        ///// Логика рисования звезды
+        ///// </summary>
+        ///// <param name="center">Точка нажатия</param>
+        ///// <param name="numPoints">Число лучей</param>
+        ///// <param name="innerRadiusRatio">Отношение радиусов</param>
+        ///// <returns></returns>
+        //private Shape CreateStar(Point center, int numPoints, double innerRadius, double outerRadius)
+        //{
+        //    var points = new PointCollection();
+        //    double angleStep = Math.PI / numPoints;
+
+        //    for (int i = 0; i < 2 * numPoints; i++)
+        //    {
+        //        double radius = i % 2 == 0 ? outerRadius : innerRadius;
+        //        double angle = i * angleStep;
+        //        points.Add(new Point(center.X + radius * Math.Cos(angle), center.Y + radius * Math.Sin(angle)));
+        //    }
+
+        //    var star = new Polygon
+        //    {
+        //        Points = points,
+        //        Stroke = new SolidColorBrush(PenColor), // Используйте вашу глобальную переменную PenColor
+        //        StrokeThickness = PenSize, // Используйте вашу глобальную переменную PenSize
+        //        Fill = Brushes.Transparent
+        //    };
+        //    return star;
+        //}
         private void StarDrawing_MouseDown(object sender, MouseButtonEventArgs e)
         {
             var inkCanvas = sender as InkCanvas;
@@ -719,40 +792,57 @@ namespace MDIPaint
             double outerRadius = double.Parse(OutRadius.Text);
 
             // Создаем звезду
-            var star = CreateStar(mousePosition, numPoints, innerRadius, outerRadius);
+            currentStar = CreateStar(mousePosition, numPoints, innerRadius, outerRadius);
 
             // Добавляем звезду на холст
-            //var starStroke = new Stroke(new StylusPointCollection(((Polygon)star).Points.Select(p => new StylusPoint(p.X, p.Y))));
-            inkCanvas.Children.Add(star);
+            inkCanvas.Children.Add(currentStar);
         }
-        /// <summary>
-        /// Логика рисования звезды
-        /// </summary>
-        /// <param name="center">Точка нажатия</param>
-        /// <param name="numPoints">Число лучей</param>
-        /// <param name="innerRadiusRatio">Отношение радиусов</param>
-        /// <returns></returns>
-        private Shape CreateStar(Point center, int numPoints, double innerRadius, double outerRadius)
+        private void StarDrawing_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            var points = new PointCollection();
+            var inkCanvas = sender as InkCanvas;
+            if (inkCanvas == null || currentStar == null) return;
+
+            // Создаем новый Stroke из Star
+            var stroke = new Stroke(new StylusPointCollection(starPoints));
+
+            stroke.DrawingAttributes.Color = ((SolidColorBrush)currentStar.Stroke).Color;
+            stroke.DrawingAttributes.Width = currentStar.StrokeThickness;
+            stroke.DrawingAttributes.Height = currentStar.StrokeThickness;
+
+            // Удаляем Star из InkCanvas
+            inkCanvas.Children.Remove(currentStar);
+
+            // Добавляем Stroke в InkCanvas
+            inkCanvas.Strokes.Add(stroke);
+
+            currentStar = null;
+            starPoints = null;
+        }
+        private Polygon CreateStar(Point center, int numPoints, double innerRadius, double outerRadius)
+        {
+            starPoints = new PointCollection();
             double angleStep = Math.PI / numPoints;
 
             for (int i = 0; i < 2 * numPoints; i++)
             {
                 double radius = i % 2 == 0 ? outerRadius : innerRadius;
                 double angle = i * angleStep;
-                points.Add(new Point(center.X + radius * Math.Cos(angle), center.Y + radius * Math.Sin(angle)));
+                starPoints.Add(new Point(center.X + radius * Math.Cos(angle), center.Y + radius * Math.Sin(angle)));
             }
+
+            // Добавляем первую точку в конец коллекции, чтобы замкнуть контур
+            starPoints.Add(starPoints[0]);
 
             var star = new Polygon
             {
-                Points = points,
+                Points = starPoints,
                 Stroke = new SolidColorBrush(PenColor), // Используйте вашу глобальную переменную PenColor
                 StrokeThickness = PenSize, // Используйте вашу глобальную переменную PenSize
                 Fill = Brushes.Transparent
             };
             return star;
         }
+
         /// <summary>
         /// Запрет на ввод нечисел
         /// </summary>
@@ -794,7 +884,7 @@ namespace MDIPaint
             TextBox textBox = sender as TextBox;
             if (string.IsNullOrWhiteSpace(textBox.Text))
             {
-                textBox.Text = "3";
+                textBox.Text = "0";
                 return;
             }
             if (textBox != null)
@@ -806,7 +896,7 @@ namespace MDIPaint
                 }
                 if (value < 3)
                 {
-                    textBox.Text = "3";
+                    textBox.Text = "0";
                 }
             }
         }
